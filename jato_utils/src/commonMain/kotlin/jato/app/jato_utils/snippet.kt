@@ -21,7 +21,7 @@ fun Number.isBetween(start: Number, end: Number): Boolean {
 /**
  * Executes [action] with the non-null value if [value] is not null and returns a null value
  */
-inline fun <T : Any> T?.getIfNotNull(default: T, action: (T) -> T): T {
+inline fun <A : Any, B> A?.getIfNotNull(default: B, action: (A) -> B): B {
     return if (this != null) action(this)
     else default
 }

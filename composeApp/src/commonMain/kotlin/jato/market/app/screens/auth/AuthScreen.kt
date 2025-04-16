@@ -25,14 +25,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Eye
 import compose.icons.feathericons.EyeOff
-import compose.icons.feathericons.Info
 import compose.icons.feathericons.Lock
 import compose.icons.feathericons.Mail
 import compose.icons.feathericons.User
-import compose.icons.feathericons.UserCheck
-import compose.icons.feathericons.UserPlus
-import compose.icons.feathericons.UserX
-import compose.icons.feathericons.Users
 import jato.market.app.data_model.TextModel
 import jato.market.app.screens.home.HomeScreen
 import jato.market.app.screens.stores.StoresScreen

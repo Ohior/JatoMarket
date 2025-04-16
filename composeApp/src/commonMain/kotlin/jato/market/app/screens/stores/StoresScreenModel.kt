@@ -4,9 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
-import jato.market.app.data_model.UserModel
-import jato.market.app.database.JsonLocalDatabase
-import jato.market.app.getJsonDatabase
+import jato.market.app.database.local.JsonLocalDatabase
 
 class StoresScreenModel:ScreenModel {
     var searchQuery by mutableStateOf("")

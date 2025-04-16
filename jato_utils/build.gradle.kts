@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.android.library)
@@ -13,11 +15,12 @@ group = "jato.app.jato_utils"
 version = "1.0.0"
 
 kotlin {
-    jvmToolchain(17)
+//    jvmToolchain(11)
 
     androidTarget { publishLibraryVariants("release") }
     jvm()
-    js { browser() }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs { browser () }
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -51,8 +54,7 @@ kotlin {
             // KMP dependencies declared in commonMain.
         }
 
-        jsMain.dependencies {
-            implementation(compose.html.core)
+        wasmJsMain.dependencies {
         }
     }
 

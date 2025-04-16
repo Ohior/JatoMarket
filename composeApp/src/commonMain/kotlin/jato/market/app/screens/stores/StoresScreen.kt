@@ -89,10 +89,6 @@ object StoresScreen : Screen {
                             content = {
                                 Icon(FeatherIcons.MoreVertical, "Drop down menu")
                             },
-                            onClick = {
-                                // Open drop down menu
-                                println("drop down clicked")
-                            },
                             items = listOf(
                                 ComposeWidget {
                                     HorizontalTextIcon(

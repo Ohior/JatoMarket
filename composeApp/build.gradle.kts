@@ -2,6 +2,7 @@ import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.reload.ComposeHotRun
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 plugins {
@@ -11,12 +12,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.hotReload)
     alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.sqlDelight)
     alias(libs.plugins.buildConfig)
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(21)
 //    jvmToolchain(21)
     androidTarget {
         //https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
@@ -25,8 +25,14 @@ kotlin {
 
     jvm()
 
-    js {
-        browser()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        moduleName = "composeApp"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "composeApp.js"
+            }
+        }
         binaries.executable()
     }
 
@@ -55,8 +61,6 @@ kotlin {
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.client.logging)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.coil)
-            implementation(libs.coil.network.ktor)
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.composeIcons.featherIcons)
@@ -66,7 +70,7 @@ kotlin {
             val voyagerVersion = "1.1.0-beta02"
             implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
             implementation("cafe.adriel.voyager:voyager-screenmodel:$voyagerVersion")
-
+            implementation("com.github.skydoves:landscapist-coil3:2.4.7")
         }
 
         commonTest.dependencies {
@@ -81,25 +85,20 @@ kotlin {
             implementation(libs.androidx.activityCompose)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.sqlDelight.driver.android)
         }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.sqlDelight.driver.sqlite)
         }
 
-        jsMain.dependencies {
-            implementation(compose.html.core)
+        wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
-            implementation(libs.sqlDelight.driver.js)
         }
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-            implementation(libs.sqlDelight.driver.native)
         }
 
     }
@@ -161,14 +160,4 @@ tasks.register<ComposeHotRun>("runHot") {
 buildConfig {
     // BuildConfig configuration here.
     // https://github.com/gmazzo/gradle-buildconfig-plugin#usage-in-kts
-}
-
-sqldelight {
-    databases {
-        create("MyDatabase") {
-            // Database configuration here.
-            // https://cashapp.github.io/sqldelight
-            packageName.set("jato.market.app.db")
-        }
-    }
 }

@@ -4,14 +4,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserModel(
-    val uid:String? = null,
     val firstName: String,
     val lastName: String,
     val email: String,
     val password: String,
-    val storeId: String? = null,
-){
-    companion object{
+    val uid: String? = null,
+    val storeUid: String? = null,
+    val store: StoreModel? = null,
+) {
+    companion object {
         fun empty() = UserModel(
             firstName = "",
             lastName = "",
@@ -23,18 +24,39 @@ data class UserModel(
 
 @Serializable
 data class StoreModel(
-    val uid:String? = null,
     val storeName: String,
+    val storeDescription: String,
     val userId: String,
+    val uid: String? = null,
     val products: List<ProductModel> = emptyList(),
-)
+) {
+    companion object {
+        fun empty() = StoreModel(
+            storeName = "",
+            userId = "",
+            storeDescription = ""
+        )
+    }
+}
 
 @Serializable
 data class ProductModel(
-    val uid:String? = null,
     val productName: String,
     val productDescription: String,
     val productPrice: Double,
     val productQuantity: Int,
     val storeId: String,
-)
+    val uid: String? = null,
+    val productImageUrls: List<String>? = null,
+    val productSummarys: List<String>? = null,
+) {
+    companion object {
+        fun empty() = ProductModel(
+            productName = "",
+            productDescription = "",
+            productPrice = 0.0,
+            productQuantity = 0,
+            storeId = ""
+        )
+    }
+}

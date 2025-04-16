@@ -6,11 +6,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
@@ -105,7 +112,7 @@ fun ClickableStyledText(
 @Composable
 fun ExpandableDropdown(
     content: @Composable () -> Unit,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {},
     items: List<ComposeWidget>,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -122,6 +129,42 @@ fun ExpandableDropdown(
         }
     }
 }
+
+@Composable
+fun MyHorizontalPager(
+    modifier: Modifier,
+    pagerCount: Int,
+    content: @Composable (Int) -> Unit
+) {
+    val pagerState = rememberPagerState() { pagerCount }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        HorizontalPager(
+            modifier = Modifier.weight(1f),
+            state = pagerState,
+//            contentPadding = PaddingValues(start = PixelDensity.extraLarge),
+        ) { page ->
+            content(page)
+        }
+        Row(
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(pagerCount) { iteration ->
+                val color =
+                    if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                Box(
+                    modifier = modifier
+                        .background(color)
+                )
+            }
+        }
+    }
+}
+
 
 //
 //@Composable
@@ -146,34 +189,33 @@ fun ExpandableDropdown(
 //        .onGloballyPositioned { size = it.size }
 //}
 //
-//@Composable
-//fun Modifier.drawUnderLine(color: Color, thickness: Dp = PixelDensity.verySmall): Modifier = composed {
-//    drawBehind {
-//        val underlineThickness = thickness.toPx() // Thickness of the underline
-//        // Calculate the start and end positions of the underline
-//        val startX = 0f
-//        val endX = size.width
-//        val baselineY = size.height// + 10
-//        // Draw the underline
-//        drawLine(
-//            color = color, // Color of the underline
-//            start = Offset(startX, baselineY),
-//            end = Offset(endX, baselineY),
-//            strokeWidth = underlineThickness
-//        )
-//    }
-//}
-//
+@Composable
+fun Modifier.drawUnderLine(color: Color, thickness: Float): Modifier = composed {
+    drawBehind {
+        // Calculate the start and end positions of the underline
+        val startX = 0f
+        val endX = size.width
+        val baselineY = size.height// + 10
+        // Draw the underline
+        drawLine(
+            color = color, // Color of the underline
+            start = Offset(startX, baselineY),
+            end = Offset(endX, baselineY),
+            strokeWidth = thickness
+        )
+    }
+}
+
 
 @Composable
-fun AutoSwitcher(images: List<ComposeWidget>) {
+fun AutoSwitcher(images: List<ComposeWidget>, millisSec: Long = 50000L) {
     // Remember the current image index
     var currentIndex by remember { mutableStateOf(0) }
 
     // Update the image index every 2 seconds
     LaunchedEffect(Unit) {
         while (true) {
-            delay(5000L) // Wait for 10 seconds
+            delay(millisSec) // Wait for 10 seconds
             currentIndex = (currentIndex + 1) % images.size // Cycle through the images
         }
     }
@@ -188,29 +230,3 @@ fun AutoSwitcher(images: List<ComposeWidget>) {
         images[currentIndex].content()
     }
 }
-
-//@Composable
-//fun Modifier.scrollScreen(
-//    orientation: Orientation,
-//    scope: CoroutineScope
-//): Modifier {
-//    return this
-//        .draggable(
-//            orientation = orientation,
-//            state = rememberDraggableState { delta ->
-//                println("delta: $delta")
-////                offset.value += delta
-//                scope.launch {
-//                    scrollState.scrollBy(-500f)
-//                }
-//            }
-//        )
-////        .draggable(
-////        orientation = orientation,
-////        state = rememberDraggableState { delta ->
-////            scope.launch {
-////                scrollState.scrollBy(-delta)
-////            }
-////        },
-////    )
-//}
