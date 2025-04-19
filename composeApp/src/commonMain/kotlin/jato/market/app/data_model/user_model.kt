@@ -8,6 +8,7 @@ data class UserModel(
     val lastName: String,
     val email: String,
     val password: String,
+    val imageUrl:String? = null,
     val uid: String? = null,
     val storeUid: String? = null,
     val store: StoreModel? = null,
@@ -27,6 +28,7 @@ data class StoreModel(
     val storeName: String,
     val storeDescription: String,
     val userId: String,
+    val imageUrl:String? = null,
     val uid: String? = null,
     val products: List<ProductModel> = emptyList(),
 ) {

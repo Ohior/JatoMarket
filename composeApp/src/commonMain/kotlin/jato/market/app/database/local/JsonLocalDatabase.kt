@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 
 private const val USER_TABLE = "UserTable.json"
 
-class JsonLocalDatabase : JsonDatabase() {
+object JsonLocalDatabase : JsonDatabase {
     private val jsonDatabase = getJsonDatabase()
 
     override fun getUserData(): UserModel? {

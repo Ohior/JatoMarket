@@ -32,19 +32,24 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -54,15 +59,20 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
+import compose.icons.feathericons.Edit
 import compose.icons.feathericons.Hash
+import compose.icons.feathericons.Plus
 import compose.icons.feathericons.ShoppingCart
 import jato.app.jato_utils.JDevice
 import jato.app.jato_utils.getIfNotNull
+import jato.app.jato_utils.ifNotNull
+import jato.app.jato_utils.ifNull
 import jato.app.jato_utils.rememberJDevice
 import jato.market.app.data_model.ComposeWidget
 import jato.market.app.data_model.ProductModel
 import jato.market.app.data_model.StoreModel
 import jato.market.app.data_model.UserModel
+import jato.market.app.screens.profile.ProfileScreen
 import jato.market.app.theme.AutoSwitcher
 import jato.market.app.theme.EXTRA_LARGE_PADDING
 import jato.market.app.theme.HorizontalTextIcon
@@ -70,6 +80,7 @@ import jato.market.app.theme.SMALL_PADDING
 import jato.market.app.theme.drawUnderLine
 import jatomarket_.composeapp.generated.resources.Res
 import jatomarket_.composeapp.generated.resources.market
+import jatomarket_.composeapp.generated.resources.no_image
 import org.jetbrains.compose.resources.painterResource
 
 
@@ -80,6 +91,8 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { StoreScreenModel() }
         val device = rememberJDevice()
+        val user by screenModel.user.collectAsState(UserModel.empty())
+
         Scaffold(
             Modifier.fillMaxSize(),
             topBar = {
@@ -101,11 +114,26 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                         }) {
                             Icon(FeatherIcons.ArrowLeft, "Go Back")
                         }
-                    }
+                    },
                 )
+            },
+            floatingActionButton = {
+                user.storeUid.ifNotNull {
+                    SmallFloatingActionButton(
+                        onClick = {
+                            // add product to store
+                        }) {
+                        HorizontalTextIcon(
+                            modifier = Modifier.padding(SMALL_PADDING),
+                            text = "add product",
+                            leadingIcon = {
+                                Icon(FeatherIcons.Plus, contentDescription = "add product to store")
+                            }
+                        )
+                    }
+                }
             }
         ) { pv ->
-            val store by screenModel.store.collectAsState(UserModel.empty())
             Column(
                 Modifier.padding(pv).fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -117,9 +145,12 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             images = listOf(
                                 ComposeWidget {
                                     StoreOwnerDetails(
-                                        storeModel = store.store ?: StoreModel.empty(),
+                                        storeModel = user.store ?: StoreModel.empty(),
                                         modifier = Modifier.weight(1f)
-                                            .height(EXTRA_LARGE_PADDING * 2f),
+                                            .height(EXTRA_LARGE_PADDING * 2f)
+                                            .clickable {
+                                                navigator.push(ProfileScreen())
+                                            },
                                     )
                                 },
                                 ComposeWidget {
@@ -146,9 +177,10 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             StoreOwnerDetails(
-                                storeModel = store.store ?: StoreModel.empty(),
+                                storeModel = user.store ?: StoreModel.empty(),
                                 modifier = Modifier
                                     .size(halfWidth.dp, EXTRA_LARGE_PADDING * 2)
+                                    .clickable { navigator.push(ProfileScreen()) }
                             )
                             Spacer(Modifier.width(SMALL_PADDING))
                             BonanzaDetails(
@@ -159,8 +191,6 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                     }
                 }
                 when (screenModel.storeScreenType) {
-                    StoreScreenType.Owner -> Unit
-
                     is StoreScreenType.Product -> {
                         DisplayProducts((screenModel.storeScreenType as StoreScreenType.Product).product)
                     }
@@ -174,7 +204,7 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             verticalItemSpacing = 8.dp,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(items = store.store.getIfNotNull(emptyList()) { it.products }) { item ->
+                            items(items = user.store.getIfNotNull(emptyList()) { it.products }) { item ->
                                 StoreItemDisplay(item) {
                                     screenModel.storeScreenType = StoreScreenType.Product(item)
                                 }
@@ -186,6 +216,7 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
             }
         }
     }
+
 
     @Composable
     private fun DisplayProducts(product: ProductModel) {

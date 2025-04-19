@@ -6,7 +6,7 @@ import jato.market.app.data_model.UserModel
 import jato.market.app.database.JsonDatabase
 import kotlinx.coroutines.flow.Flow
 
-class JsonRemoteDatabase : JsonDatabase() {
+object JsonRemoteDatabase : JsonDatabase {
     override fun getUserData(): UserModel? {
         // get user model from url
         // get store from url using the store id you got from user model

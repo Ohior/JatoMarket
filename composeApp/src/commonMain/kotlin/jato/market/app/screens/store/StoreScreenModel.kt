@@ -16,18 +16,23 @@ import kotlinx.coroutines.flow.stateIn
 sealed class StoreScreenType {
     data class Product(val product: ProductModel) : StoreScreenType()
     data object Products : StoreScreenType()
-    data object Owner : StoreScreenType()
 }
 
 class StoreScreenModel : ScreenModel {
     private val _boughtProduct = mutableStateOf<List<ProductModel>>(emptyList())
     val boughtProduct: State<List<ProductModel>> = _boughtProduct
-    val store = JsonLocalDatabase()
+    val user = JsonLocalDatabase
         .getUserDataFlow()
         .stateIn(screenModelScope, SharingStarted.Eagerly, UserModel.empty())
+    private var _editUser by mutableStateOf(user.value)
+    val editUser = _editUser
     var storeScreenType by mutableStateOf<StoreScreenType>(StoreScreenType.Products)
 
     fun addProduct(product: ProductModel) {
         _boughtProduct.value += product
+    }
+
+    fun updateUser(user: UserModel) {
+        _editUser = user
     }
 }

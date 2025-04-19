@@ -5,9 +5,9 @@ import jato.market.app.data_model.StoreModel
 import jato.market.app.data_model.UserModel
 import kotlinx.coroutines.flow.Flow
 
-abstract class JsonDatabase {
-    abstract fun getUserData():UserModel?
-    abstract fun getStoreData():StoreModel?
-    abstract fun getProductsData():List<ProductModel>?
-    abstract fun getUserDataFlow(): Flow<UserModel>
+interface JsonDatabase {
+    fun getUserData():UserModel?
+    fun getStoreData():StoreModel?
+    fun getProductsData():List<ProductModel>?
+    fun getUserDataFlow(): Flow<UserModel>
 }

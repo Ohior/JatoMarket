@@ -73,7 +73,7 @@ object StoresScreen : Screen {
         Scaffold(
             Modifier.fillMaxSize(),
             topBar = {
-                val jsonData by screenModel.jsonDatabase.getUserDataFlow().collectAsState(null)
+                val jsonData by screenModel.jsonDatabase.collectAsState(null)
                 TopAppBar(
                     title = { Text("Stores") },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceBright),
@@ -82,7 +82,7 @@ object StoresScreen : Screen {
                             if (jsonData == null) {
                                 navigator.replace(AuthScreen)
                             } else {
-                                navigator.replace(ProfileScreen(jsonData))
+                                navigator.push(ProfileScreen(jsonData))
                             }
                         }) { Icon(FeatherIcons.User, "User icons") }
                         ExpandableDropdown(
