@@ -7,14 +7,15 @@ import cafe.adriel.voyager.core.model.ScreenModel
 
 enum class AuthScreenType {
     Login,
-    Register
+    Register,
+    ConfirmRegister
 }
 
 class AuthScreemModel : ScreenModel {
     var firstName by mutableStateOf("")
     var lastName by mutableStateOf("")
     var email by mutableStateOf("")
-    var password by mutableStateOf("")
+    var verificationCode by mutableStateOf("")
     var hidePassword by mutableStateOf(true)
 
     var getAuthScreenType by mutableStateOf(AuthScreenType.Login)

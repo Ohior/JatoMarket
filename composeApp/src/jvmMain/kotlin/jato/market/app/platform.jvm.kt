@@ -51,7 +51,7 @@ actual fun getJsonDatabase(): JsonDatabase {
         override fun getData(tableName: String): String? {
             return try {
                 val file = getFilePath(tableName)
-                file.readText()
+                Json.encodeToString<String>(file.readText().trim())
             } catch (e: Exception) {
                 Logger.w { e.toString() }
                 null
@@ -66,3 +66,5 @@ actual fun getJsonDatabase(): JsonDatabase {
         }
     }
 }
+
+actual fun getJMapManager(): JMapManager  = JvmJMapManager()

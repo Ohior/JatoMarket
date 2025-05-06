@@ -57,6 +57,7 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.client.logging)
@@ -64,13 +65,47 @@ kotlin {
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.composeIcons.featherIcons)
+            implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.2") // Replace with the correct version
 
+            // local module
             implementation(project(":jato_utils"))
 
+            // navigation and screen manageer
             val voyagerVersion = "1.1.0-beta02"
             implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
             implementation("cafe.adriel.voyager:voyager-screenmodel:$voyagerVersion")
+            // image loader
             implementation("com.github.skydoves:landscapist-coil3:2.4.7")
+
+            // Geocoding
+            implementation(libs.compass.geocoder)
+
+            // To use geocoding you need to use one or more of the following
+
+
+            // Optional - Geocoder support for all platforms, but requires an API key from the service
+            implementation(libs.compass.geocoder.web.googlemaps)
+            implementation(libs.compass.geocoder.web.mapbox)
+            implementation(libs.compass.geocoder.web.opencage)
+
+            // Optional - If you want to create your own geocoder implementation
+            implementation(libs.compass.geocoder.web)
+
+            // Geolocation
+            implementation(libs.compass.geolocation)
+
+            // To use geolocation you need to use one or more of the following
+
+
+            // Autocomplete
+            implementation(libs.compass.autocomplete)
+
+            // Optional - Autocomplete support for all platforms, using services Geocoder APIs
+            implementation(libs.compass.autocomplete.geocoder.googlemaps)
+            implementation(libs.compass.autocomplete.geocoder.mapbox)
+
+            // Optional - If you want to create your own geocoder implementation
+            implementation(libs.compass.autocomplete.web)
         }
 
         commonTest.dependencies {
@@ -95,12 +130,29 @@ kotlin {
 
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+            // Optional - Geolocation support for JS/WASM Browser Geolocation API
+            implementation(libs.compass.geolocation.browser)
         }
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
 
+        val mobileMain by creating {
+            dependsOn(commonMain.get())
+            androidMain.get().dependsOn(this)
+            iosMain.get().dependsOn(this)
+            dependencies {
+                // Optional - Location permissions for mobile
+                implementation(libs.compass.permissions.mobile)
+                // Optional - Geocoder support for only iOS and Android
+                implementation(libs.compass.geocoder.mobile)
+                // Optional - Geolocation support for only iOS and Android
+                implementation(libs.compass.geolocation.mobile)
+                // Optional - Autocomplete support for only iOS and Android using native Geocoder
+                implementation(libs.compass.autocomplete.mobile)
+            }
+        }
     }
 }
 

@@ -82,3 +82,5 @@ actual fun getJsonDatabase(): JsonDatabase {
         }
     }
 }
+
+actual fun getJMapManager(): JMapManager = MobileJMapmanager()

@@ -15,7 +15,7 @@ actual fun getJsonDatabase(): JsonDatabase {
                 localStorage.setItem(tableName, json)
                 true
             } catch (e: Exception) {
-                console.error("createData error", e)
+                js("""console.error("createData error", e)""")
                 false
             }
         }
@@ -29,7 +29,7 @@ actual fun getJsonDatabase(): JsonDatabase {
                 localStorage.removeItem(tableName)
                 true
             } catch (e: Exception) {
-                console.error("deleteData error", e)
+                js("""console.error("createData error", e)""")
                 false
             }
         }
@@ -39,7 +39,7 @@ actual fun getJsonDatabase(): JsonDatabase {
                 val jsonString = localStorage.getItem(tableName) ?: return null
                 jsonString
             } catch (e: Exception) {
-                console.error("readRawJson error", e)
+                js("""console.error("createData error", e)""")
                 null
             }
         }
@@ -52,3 +52,5 @@ actual fun getJsonDatabase(): JsonDatabase {
         }
     }
 }
+
+actual fun getJMapManager(): JMapManager = WasmJsJMapManager()

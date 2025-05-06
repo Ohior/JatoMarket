@@ -6,11 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import jato.app.jato_utils.ifNotNull
 import jato.market.app.data_model.ProductModel
+import jato.market.app.data_model.StoreModel
 import jato.market.app.data_model.UserModel
-import jato.market.app.database.local.JsonLocalDatabase
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import jato.market.app.database.remote.JatoDatabase
+import kotlinx.coroutines.launch
 
 
 sealed class StoreScreenType {
@@ -18,21 +19,22 @@ sealed class StoreScreenType {
     data object Products : StoreScreenType()
 }
 
-class StoreScreenModel : ScreenModel {
+class StoreScreenModel(userDocumentId: String, storeDocumentId: String) : ScreenModel {
     private val _boughtProduct = mutableStateOf<List<ProductModel>>(emptyList())
     val boughtProduct: State<List<ProductModel>> = _boughtProduct
-    val user = JsonLocalDatabase
-        .getUserDataFlow()
-        .stateIn(screenModelScope, SharingStarted.Eagerly, UserModel.empty())
-    private var _editUser by mutableStateOf(user.value)
-    val editUser = _editUser
+    var user by mutableStateOf<UserModel>(UserModel.empty())
+        private set
+    var store by mutableStateOf<StoreModel>(StoreModel.empty())
+        private set
     var storeScreenType by mutableStateOf<StoreScreenType>(StoreScreenType.Products)
-
-    fun addProduct(product: ProductModel) {
-        _boughtProduct.value += product
-    }
-
-    fun updateUser(user: UserModel) {
-        _editUser = user
+    init {
+        screenModelScope.launch {
+            JatoDatabase.getUserData(userDocumentId).ifNotNull {
+                user = it
+            }
+            JatoDatabase.getStoreData(storeDocumentId).ifNotNull {
+                store = it
+            }
+        }
     }
 }

@@ -14,17 +14,20 @@ private const val USER_TABLE = "UserTable.json"
 object JsonLocalDatabase : JsonDatabase {
     private val jsonDatabase = getJsonDatabase()
 
-    override fun getUserData(): UserModel? {
+    override suspend fun getUserData(): UserModel? {
         val data = jsonDatabase.getData(USER_TABLE)
-        return if (data.isNullOrEmpty()) null else Json.decodeFromString(data)
+        return if (data.isNullOrEmpty()) null
+        else {
+            Json.decodeFromString<UserModel>(Json.decodeFromString<String>(data))
+        }
     }
 
-    override fun getStoreData(): StoreModel? {
+    override suspend fun getStoreData(): StoreModel? {
         val user = getUserData()
         return user?.store
     }
 
-    override fun getProductsData(): List<ProductModel>? {
+    override suspend fun getProductsData(): List<ProductModel>? {
         val user = getUserData()
         return user?.store?.products
     }

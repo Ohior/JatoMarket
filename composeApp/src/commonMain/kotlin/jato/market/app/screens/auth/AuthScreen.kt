@@ -1,10 +1,14 @@
 package jato.market.app.screens.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -18,16 +22,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import compose.icons.FeatherIcons
+import compose.icons.feathericons.AlertCircle
 import compose.icons.feathericons.Eye
 import compose.icons.feathericons.EyeOff
 import compose.icons.feathericons.Lock
 import compose.icons.feathericons.Mail
 import compose.icons.feathericons.User
+import jato.app.jato_utils.JDevice
+import jato.app.jato_utils.rememberJDevice
 import jato.market.app.data_model.TextModel
 import jato.market.app.screens.home.HomeScreen
 import jato.market.app.screens.stores.StoresScreen
@@ -37,6 +45,8 @@ import jato.market.app.theme.HorizontalTextIcon
 import jato.market.app.theme.LARGE_PADDING
 import jato.market.app.theme.MEDIUM_PADDING
 import jato.market.app.theme.SMALL_PADDING
+import jato.market.app.theme.ToastLayout
+import jato.market.app.utils.Constants
 import jatomarket_.composeapp.generated.resources.Res
 import jatomarket_.composeapp.generated.resources.market
 import org.jetbrains.compose.resources.painterResource
@@ -68,8 +78,63 @@ object AuthScreen : Screen {
             when (screenModel.getAuthScreenType) {
                 AuthScreenType.Login -> LoginScreen(screenModel)
                 AuthScreenType.Register -> RegisterScreen(screenModel)
+                AuthScreenType.ConfirmRegister -> {
+                    ConfirmRegisterScreen(screenModel)
+                }
             }
         }
+    }
+
+    @Composable
+    fun ConfirmRegisterScreen(screenModel: AuthScreemModel) {
+        val jDevice = rememberJDevice()
+        ToastLayout(
+//            modifier = Modifier.fillMaxSize(),
+//            alignment = Alignment.Center,
+            toastDelay = 3000,
+            toastContent = {
+                HorizontalTextIcon(
+                    modifier = Modifier.padding(MEDIUM_PADDING),
+                    leadingIcon = {
+                        Icon(FeatherIcons.AlertCircle, contentDescription = "notification")
+                    },
+                    text = "account verified"
+                )
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(if (jDevice is JDevice.Portrait) .8f else .5f).border(
+                            SMALL_PADDING / 2,
+                            MaterialTheme.colorScheme.onSurface,
+                            MaterialTheme.shapes.small,
+                        )
+                        .padding(MEDIUM_PADDING),
+                    verticalArrangement = Arrangement.spacedBy(SMALL_PADDING),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TextField(
+                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.inversePrimary),
+                        value = "",
+                        onValueChange = {  /* TODO: */ },
+                        singleLine = true,
+                        placeholder = { (Text("eg... X X X X X X X X")) }
+                    )
+                    Text(text = Constants.VERIFY_MESSAGE, textAlign = TextAlign.Center)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(onClick = { screenModel.getAuthScreenType = AuthScreenType.Register}) {
+                            Text("Close")
+                        }
+                        Button(onClick = { showToast = true }) {
+                            Text("Verify")
+                        }
+                    }
+                }
+            }
+        )
     }
 
     @Composable
@@ -90,9 +155,9 @@ object AuthScreen : Screen {
                 textStyle = MaterialTheme.typography.bodyMedium
             )
             TextField(
-                value = screenModel.password,
-                onValueChange = { screenModel.password = it },
-                label = { Text("Password") },
+                value = screenModel.verificationCode,
+                onValueChange = { screenModel.verificationCode = it },
+                label = { Text("Verification Code") },
                 leadingIcon = { Icon(FeatherIcons.Lock, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { screenModel.hidePassword = !screenModel.hidePassword }) {
@@ -127,8 +192,6 @@ object AuthScreen : Screen {
 
     @Composable
     private fun RegisterScreen(screenModel: AuthScreemModel) {
-        val navigator = LocalNavigator.currentOrThrow
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(MEDIUM_PADDING)
@@ -155,26 +218,11 @@ object AuthScreen : Screen {
                 singleLine = true,
                 leadingIcon = { Icon(FeatherIcons.Mail, contentDescription = null) },
             )
-            TextField(
-                value = screenModel.password,
-                onValueChange = { screenModel.password = it },
-                label = { Text("Password") },
-                visualTransformation = if (screenModel.hidePassword) PasswordVisualTransformation() else VisualTransformation.None,
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = { screenModel.hidePassword = !screenModel.hidePassword }) {
-                        Icon(
-                            if (screenModel.hidePassword) FeatherIcons.EyeOff
-                            else FeatherIcons.Eye,
-                            contentDescription = null
-                        )
-                    }
-                },
-                leadingIcon = { Icon(FeatherIcons.Lock, contentDescription = null) },
-            )
 
             Button(onClick = {
-                screenModel.signUp(onComplete = { navigator.replace(HomeScreen) })
+                screenModel.signUp(onComplete = {
+                    screenModel.getAuthScreenType = AuthScreenType.ConfirmRegister
+                })
             }) {
                 Text("Register", style = MaterialTheme.typography.titleMedium)
             }

@@ -10,6 +10,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import jato.market.app.screens.stores.StoresScreen
+import kotlinx.coroutines.delay
 
 object HomeScreen : Screen {
     @Composable
@@ -20,7 +21,8 @@ object HomeScreen : Screen {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LaunchedEffect(null) {
-                    navigator.replace(StoresScreen)
+                delay(1000)
+                navigator.replace(StoresScreen)
             }
         }
     }

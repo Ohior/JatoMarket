@@ -47,31 +47,35 @@ import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
 import compose.icons.feathericons.Edit3
 import compose.icons.feathericons.Home
+import compose.icons.feathericons.Map
+import compose.icons.feathericons.RefreshCw
 import compose.icons.feathericons.Save
 import jato.app.jato_utils.JDevice
 import jato.app.jato_utils.getIfNotNull
 import jato.app.jato_utils.ifNotNull
 import jato.app.jato_utils.ifNull
 import jato.app.jato_utils.rememberJDevice
-import jato.market.app.data_model.UserModel
+import jato.market.app.screens.map.MapScreen
+import jato.market.app.screens.store.StoreScreen
 import jato.market.app.theme.EXTRA_LARGE_PADDING
 import jato.market.app.theme.HorizontalTextIcon
 import jato.market.app.theme.SMALL_PADDING
+import jato.market.app.theme.ToastLayout
 import jatomarket_.composeapp.generated.resources.Res
 import jatomarket_.composeapp.generated.resources.no_image
 import org.jetbrains.compose.resources.painterResource
 
-class ProfileScreen(private val userModel: UserModel? = null) : Screen {
+class ProfileScreen(private val userDocumentId: String) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val device = rememberJDevice()
-        val screenModel = rememberScreenModel { ProfileScreenModel() }
+        val screenModel = rememberScreenModel { ProfileScreenModel(userDocumentId) }
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(userModel.getIfNotNull("Jato Market User") { "${it.firstName} ${it.lastName}" }) },
+                    title = { Text("🙅🏽‍♂️ ${screenModel.firstName} ${screenModel.lastName}") },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceBright),
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
@@ -149,8 +153,11 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
                         Icon(FeatherIcons.ArrowLeft, "Go Back")
                     }
                     Spacer(Modifier.width(EXTRA_LARGE_PADDING))
-                    Button(onClick = { onDismissRequest();screenModel.saveButtonClicked() }) {
-                        Icon(FeatherIcons.Save, "Go Back")
+                    Button(onClick = {
+                        onDismissRequest()
+                        screenModel.createUpdateStore()
+                    }) {
+                        Icon(FeatherIcons.Save, "create update store")
                     }
                 }
             }
@@ -175,6 +182,7 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
             )
         }
     }
+
 
     @Composable
     private fun OwnerDisplayTablet(screenModel: ProfileScreenModel) {
@@ -304,7 +312,7 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
 
     @Composable
     private fun ProfileDisplay(modifier: Modifier, screenModel: ProfileScreenModel) {
-//        val user by screenModel.user.collectAsState()
+        val navigator = LocalNavigator.currentOrThrow
         Column(
             modifier,
             verticalArrangement = Arrangement.spacedBy(SMALL_PADDING),
@@ -324,6 +332,15 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
                     contentDescription = "No image"
                 )
             }
+            HorizontalTextIcon(
+                text = "Long : ${screenModel.userLong} Lat : ${screenModel.userLat}",
+                leadingIcon = {
+                    IconButton(onClick = {
+                        screenModel.updateLongLat()
+                    }) { Icon(FeatherIcons.RefreshCw, "update lat and long") }
+                },
+                textStyle = MaterialTheme.typography.titleMedium
+            )
             Text(
                 "${screenModel.firstName} ${screenModel.lastName}",
                 overflow = TextOverflow.Ellipsis,
@@ -339,8 +356,8 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
                             MaterialTheme.colorScheme.surfaceContainer,
                             MaterialTheme.shapes.small
                         )
-                        .padding(SMALL_PADDING)
-                        .clickable { screenModel.readOnly = !screenModel.readOnly },
+                        .clickable { screenModel.readOnly = !screenModel.readOnly }
+                        .padding(SMALL_PADDING),
                     text = "Edit Profile",
                     leadingIcon = { Icon(FeatherIcons.Edit3, "Toggle text editing") },
                     textStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.W300)
@@ -351,28 +368,64 @@ class ProfileScreen(private val userModel: UserModel? = null) : Screen {
                             MaterialTheme.colorScheme.surfaceContainer,
                             MaterialTheme.shapes.small
                         )
-                        .padding(SMALL_PADDING)
-                        .clickable { screenModel.saveButtonClicked() },
+
+                        .clickable { screenModel.createUpdateStore() }.padding(SMALL_PADDING),
                     text = "Update Profile",
                     leadingIcon = { Icon(FeatherIcons.Save, "update or save user profile") },
                     textStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.W300)
                 )
-            }
-
-            screenModel.user.ifNotNull { user ->
-                if (user.storeUid == null || user.store == null) {
+                ToastLayout(toastContent = {
+                    HorizontalTextIcon(leadingIcon = {
+                        Icon(
+                            FeatherIcons.Map,
+                            "view market and user location"
+                        )
+                    }, text = "Map / Location is not available")
+                }) {
                     HorizontalTextIcon(
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.surfaceContainer,
                                 MaterialTheme.shapes.small
                             )
-                            .padding(SMALL_PADDING)
                             .clickable {
-                                screenModel.createStorePopup = !screenModel.createStorePopup
-                            },
-                        text = "Create Store",
-                        leadingIcon = { Icon(FeatherIcons.Home, "create store") },
+                                screenModel.user.ifNotNull { u ->
+                                    navigator.push(MapScreen(u.documentId))
+                                }.ifNull { showToast = true }
+                            }.padding(SMALL_PADDING),
+                        text = "Map Location",
+                        leadingIcon = { Icon(FeatherIcons.Map, "view market and user location") },
+                        textStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.W300)
+                    )
+                }
+
+                screenModel.user.ifNotNull { user ->
+                    val storeId = user.storeDocumentId.getIfNotNull(false) { true }
+                    HorizontalTextIcon(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.shapes.small
+                            )
+                            .clickable {
+                                if (storeId) {
+                                    screenModel.createStorePopup = !screenModel.createStorePopup
+                                } else {
+                                    navigator.push(
+                                        StoreScreen(
+                                            user.storeDocumentId!!,
+                                            userDocumentId
+                                        )
+                                    )
+                                }
+                            }.padding(SMALL_PADDING),
+                        text = if (storeId) "Create Store" else "Goto Store",
+                        leadingIcon = {
+                            Icon(
+                                FeatherIcons.Home,
+                                if (storeId) "Create Store" else "Goto Store"
+                            )
+                        },
                         textStyle = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.W300)
                     )
                 }

@@ -34,22 +34,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -59,45 +53,42 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.ArrowLeft
-import compose.icons.feathericons.Edit
 import compose.icons.feathericons.Hash
 import compose.icons.feathericons.Plus
 import compose.icons.feathericons.ShoppingCart
 import jato.app.jato_utils.JDevice
 import jato.app.jato_utils.getIfNotNull
 import jato.app.jato_utils.ifNotNull
-import jato.app.jato_utils.ifNull
 import jato.app.jato_utils.rememberJDevice
 import jato.market.app.data_model.ComposeWidget
 import jato.market.app.data_model.ProductModel
 import jato.market.app.data_model.StoreModel
-import jato.market.app.data_model.UserModel
 import jato.market.app.screens.profile.ProfileScreen
 import jato.market.app.theme.AutoSwitcher
 import jato.market.app.theme.EXTRA_LARGE_PADDING
 import jato.market.app.theme.HorizontalTextIcon
 import jato.market.app.theme.SMALL_PADDING
+import jato.market.app.theme.createShimmer
 import jato.market.app.theme.drawUnderLine
 import jatomarket_.composeapp.generated.resources.Res
 import jatomarket_.composeapp.generated.resources.market
-import jatomarket_.composeapp.generated.resources.no_image
 import org.jetbrains.compose.resources.painterResource
 
 
-class StoreScreen(private val storeId: String, private val userId: String) : Screen {
+class StoreScreen(private val storeDocumentId: String, private val userDocumentId: String) :
+    Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { StoreScreenModel() }
+        val screenModel = rememberScreenModel { StoreScreenModel(userDocumentId, storeDocumentId) }
         val device = rememberJDevice()
-        val user by screenModel.user.collectAsState(UserModel.empty())
 
         Scaffold(
             Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text("Store $storeId $userId") },
+                    title = { Text("${screenModel.user.firstName} ${screenModel.user.lastName}") },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceBright),
                     actions = {
                         CartDisplay(
@@ -118,7 +109,7 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                 )
             },
             floatingActionButton = {
-                user.storeUid.ifNotNull {
+                screenModel.user.storeDocumentId.ifNotNull {
                     SmallFloatingActionButton(
                         onClick = {
                             // add product to store
@@ -145,11 +136,11 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             images = listOf(
                                 ComposeWidget {
                                     StoreOwnerDetails(
-                                        storeModel = user.store ?: StoreModel.empty(),
+                                        storeModel = screenModel.store,
                                         modifier = Modifier.weight(1f)
                                             .height(EXTRA_LARGE_PADDING * 2f)
                                             .clickable {
-                                                navigator.push(ProfileScreen())
+                                                navigator.push(ProfileScreen(screenModel.user.documentId))
                                             },
                                     )
                                 },
@@ -177,10 +168,10 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             StoreOwnerDetails(
-                                storeModel = user.store ?: StoreModel.empty(),
+                                storeModel = screenModel.store,
                                 modifier = Modifier
                                     .size(halfWidth.dp, EXTRA_LARGE_PADDING * 2)
-                                    .clickable { navigator.push(ProfileScreen()) }
+                                    .clickable { navigator.push(ProfileScreen(screenModel.user.documentId)) }
                             )
                             Spacer(Modifier.width(SMALL_PADDING))
                             BonanzaDetails(
@@ -204,7 +195,7 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                             verticalItemSpacing = 8.dp,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(items = user.store.getIfNotNull(emptyList()) { it.products }) { item ->
+                            items(items = screenModel.user.store.getIfNotNull(emptyList()) { it.products }) { item ->
                                 StoreItemDisplay(item) {
                                     screenModel.storeScreenType = StoreScreenType.Product(item)
                                 }
@@ -346,13 +337,20 @@ class StoreScreen(private val storeId: String, private val userId: String) : Scr
                     contentScale = ContentScale.FillBounds,
                 )
             )
-            ListItem(
-                modifier = Modifier.wrapContentSize().fillMaxHeight(),
-                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                headlineContent = { Text(storeModel.storeName) },
-                supportingContent = { Text(storeModel.storeDescription) },
-                overlineContent = { Text("Number of product ${storeModel.products.size}") }
-            )
+            if (storeModel.storeName.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight()
+                        .createShimmer(listOf(Color.DarkGray, Color.LightGray)),
+                )
+            } else {
+                ListItem(
+                    modifier = Modifier.wrapContentSize().fillMaxHeight(),
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    headlineContent = { Text(text = storeModel.storeName) },
+                    supportingContent = { Text(text = storeModel.storeDescription) },
+                    overlineContent = { Text(text = "Number of product ${storeModel.products.size}") }
+                )
+            }
         }
     }
 }

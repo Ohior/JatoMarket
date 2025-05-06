@@ -46,8 +46,11 @@ import compose.icons.feathericons.Menu
 import compose.icons.feathericons.MoreVertical
 import compose.icons.feathericons.User
 import jato.app.jato_utils.JDevice
+import jato.app.jato_utils.ifNotNull
+import jato.app.jato_utils.ifNull
 import jato.app.jato_utils.rememberJDevice
 import jato.market.app.data_model.ComposeWidget
+import jato.market.app.data_model.StoreModel
 import jato.market.app.screens.auth.AuthScreen
 import jato.market.app.screens.profile.ProfileScreen
 import jato.market.app.screens.store.StoreScreen
@@ -60,7 +63,7 @@ import jatomarket_.composeapp.generated.resources.Res
 import jatomarket_.composeapp.generated.resources.market
 import org.jetbrains.compose.resources.painterResource
 
-private val items = List(100) { "Item #$it" }
+//private val items = List(100) { "Item #$it" }
 
 object StoresScreen : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -69,20 +72,19 @@ object StoresScreen : Screen {
         val device = rememberJDevice()
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { StoresScreenModel() }
-
+        val storeFlow by screenModel.storeFlow.collectAsState(emptyList<StoreModel>())
         Scaffold(
             Modifier.fillMaxSize(),
             topBar = {
-                val jsonData by screenModel.jsonDatabase.collectAsState(null)
                 TopAppBar(
-                    title = { Text("Stores") },
+                    title = { Text("🏪 Stores") },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceBright),
                     actions = {
                         IconButton(onClick = {
-                            if (jsonData == null) {
-                                navigator.replace(AuthScreen)
-                            } else {
-                                navigator.push(ProfileScreen(jsonData))
+                            screenModel.localUser.ifNull {
+                                navigator.push(AuthScreen)
+                            }.ifNotNull {
+                                navigator.push(ProfileScreen(it.documentId))
                             }
                         }) { Icon(FeatherIcons.User, "User icons") }
                         ExpandableDropdown(
@@ -189,7 +191,7 @@ object StoresScreen : Screen {
                     verticalItemSpacing = 8.dp,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(items) { item ->
+                    items(storeFlow) { item ->
                         StoreItemDisplay(navigator, item)
                     }
                 }
@@ -198,7 +200,7 @@ object StoresScreen : Screen {
     }
 
     @Composable
-    private fun StoreItemDisplay(navigator: Navigator, item: String) {
+    private fun StoreItemDisplay(navigator: Navigator, item: StoreModel) {
         ListItem(
             modifier = Modifier
                 .width(width = 300.dp)
@@ -209,19 +211,19 @@ object StoresScreen : Screen {
                 )
                 .clickable {
                     navigator.push(
-                        StoreScreen(item, item)
+                        StoreScreen(item.documentId, item.userDocumentId)
                     )
                 }
                 .padding(SMALL_PADDING),
             headlineContent = {
                 Text(
-                    "Store title and name $item",
+                    item.storeName,
                     style = MaterialTheme.typography.titleMedium
                 )
             },
             supportingContent = {
                 Text(
-                    "Store description and details $item",
+                    item.storeDescription,
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -233,6 +235,4 @@ object StoresScreen : Screen {
             }
         )
     }
-
-
 }

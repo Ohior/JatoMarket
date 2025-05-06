@@ -12,5 +12,9 @@ interface JsonDatabase {
     fun deleteData(tableName: String): Boolean
 }
 
+expect fun getJMapManager(): JMapManager
 
 expect fun getJsonDatabase(): JsonDatabase
+
+
+//return Location(6.34, 5.62) // Example: Benin City mock location
